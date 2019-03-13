@@ -10,12 +10,10 @@ import java.util.Scanner;
 
 public class Main implements Runnable{
 
-    Scanner scanner = new Scanner(System.in);
-    String ip;
-    int port;
+    private Scanner scanner = new Scanner(System.in);
+    private String ip;
+    private int port;
     private boolean accepted = false;
-    private Socket socket;
-    private Thread thread;
     private DataOutputStream dos;
     private DataInputStream dis;
     private ServerSocket serverSocket;
@@ -27,15 +25,15 @@ public class Main implements Runnable{
     }
 
     private void game(){
-        System.out.println("Please input the IP: ");
+        System.out.println("Wprowadz IP: ");
         ip = scanner.nextLine();
-        System.out.println("Please input the port: ");
+        System.out.println("Wporwadz PORT: ");
         port = scanner.nextInt();
         /*ip="127.0.0.1";
         port=22222;*/
 
         if (!connect()) initializeServer();
-        thread = new Thread(this, "TicTacToe");
+        Thread thread = new Thread(this);
         thread.start();
 
         Thread thread1 = new Thread(() ->{
@@ -57,15 +55,15 @@ public class Main implements Runnable{
 
     private boolean connect() {
         try {
-            socket = new Socket(ip, port);
+            Socket socket = new Socket(ip, port);
             dos = new DataOutputStream(socket.getOutputStream());
             dis = new DataInputStream(socket.getInputStream());
             accepted = true;
         } catch (IOException e) {
-            System.out.println("Unable to connect to the address: " + ip + ":" + port + " | Starting a server");
+            System.out.println("Nie mozna polaczyc sie z adresem: " + ip + ":" + port + " | Uruchamianie serwera");
             return false;
         }
-        System.out.println("Successfully connected to the server.");
+        System.out.println("Pomyslnie polaczono z serwerem");
         return true;
     }
 
@@ -80,6 +78,7 @@ public class Main implements Runnable{
 
     @Override
     public void run() {
+        //noinspection InfiniteLoopStatement
         while (true) {
             tick();
             if (!accepted) {
@@ -90,13 +89,13 @@ public class Main implements Runnable{
 
     private void tick() {
         if(errors > 10){
-            System.out.println("Connection timed out");
+            System.out.println("Utracono placzenie");
             System.exit(0);
         }
         if (accepted) {
             try {
                 String space = dis.readUTF();
-                System.out.println(space);
+                if (!space.isEmpty()) System.out.println(space);
             } catch (IOException e) {
                 errors++;
                 e.printStackTrace();
@@ -105,13 +104,13 @@ public class Main implements Runnable{
     }
 
     private void listenForServerRequest() {
-        Socket socket = null;
+        Socket socket;
         try {
             socket = serverSocket.accept();
             dos = new DataOutputStream(socket.getOutputStream());
             dis = new DataInputStream(socket.getInputStream());
             accepted = true;
-            System.out.println("CLIENT HAS REQUESTED TO JOIN, AND WE HAVE ACCEPTED");
+            System.out.println("Klient polaczyl się");
         } catch (IOException e) {
             e.printStackTrace();
         }
